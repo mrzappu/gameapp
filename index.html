@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Training</title>
+    <!-- Tailwind CSS for modern, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            transition: background-image 0.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Default dark background */
+        body.bg-default {
+            background-color: #1a202c;
+        }
+        /* Custom background gradients */
+        body.bg-blue-gradient {
+            background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+        }
+        body.bg-purple-gradient {
+            background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+        }
+        body.bg-orange-gradient {
+            background-image: linear-gradient(to right, #f83600 0%, #f9d423 100%);
+        }
+        
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+    <div class="game-container">
+        <!-- Game Title -->
+        <div class="flex items-center justify-between w-full">
+            <h1 class="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">
+                Brain Trainer
+            </h1>
+            <button id="settings-btn" class="mb-4 p-2 bg-gray-700 hover:bg-gray-600 rounded-full transition-colors shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.222.608 3.218 0a1.724 1.724 0 001.066-2.573z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Game Info & Controls -->
+        <div id="game-stats" class="bg-gray-800 p-4 rounded-xl shadow-inner w-full flex justify-between items-center transition-all duration-300">
+            <div class="flex flex-col items-start">
+                <span class="text-xl font-semibold">Score:</span>
+                <span id="score" class="text-3xl font-bold text-gray-300">0</span>
+            </div>
+            <div class="flex flex-col items-end">
+                <span class="text-xl font-semibold">Time:</span>
+                <span id="timer" class="text-3xl font-bold text-yellow-300">60s</span>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div id="game-area" class="bg-gray-800 p-8 rounded-xl shadow-lg w-full text-center transition-all duration-300">
+            <!-- Start Screen -->
+            <div id="start-screen" class="space-y-4">
+                <h2 class="text-2xl font-bold">Welcome!</h2>
+                <p class="text-gray-400">Answer as many math questions as you can in 60 seconds.</p>
+                <button id="start-btn" class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full transition-colors shadow-lg">
+                    Start Game
+                </button>
+            </div>
+            
+            <!-- Question Screen -->
+            <div id="question-screen" class="hidden space-y-6">
+                <h2 id="question" class="text-5xl font-extrabold text-white">10 + 5</h2>
+                <input id="answer-input" type="number" placeholder="Your Answer" class="w-full text-center p-4 text-3xl rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                <p id="feedback" class="text-xl font-semibold opacity-0 transition-opacity"></p>
+            </div>
+
+            <!-- End Screen -->
+            <div id="end-screen" class="hidden space-y-4">
+                <h2 class="text-2xl font-bold">Game Over!</h2>
+                <p class="text-gray-400">Your final score is:</p>
+                <p id="final-score" class="text-5xl font-extrabold text-blue-400">0</p>
+                <button id="restart-btn" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full transition-colors shadow-lg">
+                    Play Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-content text-center">
+            <h3 class="text-2xl font-bold mb-4">Settings</h3>
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-xl font-semibold mb-2">Background</h4>
+                    <div class="flex justify-center gap-4">
+                        <button class="bg-gray-900 rounded-full w-10 h-10 border-4 border-transparent hover:border-white transition-colors" data-bg="bg-default"></button>
+                        <button class="bg-blue-gradient rounded-full w-10 h-10 border-4 border-transparent hover:border-white transition-colors" data-bg="bg-blue-gradient"></button>
+                        <button class="bg-purple-gradient rounded-full w-10 h-10 border-4 border-transparent hover:border-white transition-colors" data-bg="bg-purple-gradient"></button>
+                        <button class="bg-orange-gradient rounded-full w-10 h-10 border-4 border-transparent hover:border-white transition-colors" data-bg="bg-orange-gradient"></button>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold mb-2">Music</h4>
+                    <button id="music-btn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-full transition-colors">
+                        Toggle Music
+                    </button>
+                </div>
+            </div>
+            <button id="close-settings-btn" class="absolute top-2 right-2 p-1 text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <button id="about-btn" class="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-full transition-colors">
+                About
+            </button>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal-overlay hidden">
+        <div class="modal-content text-center">
+            <h3 class="text-2xl font-bold mb-4">About Brain Trainer</h3>
+            <div class="text-left space-y-4 text-gray-300">
+                <p><strong>Rules:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>You have 60 seconds to answer as many math questions as possible.</li>
+                    <li>The questions are simple addition, subtraction, multiplication, and division problems.</li>
+                    <li>A correct answer adds one point to your score.</li>
+                    <li>An incorrect answer does not deduct points.</li>
+                    <li>The game ends when the timer runs out.</li>
+                </ul>
+                <p class="mt-4">Developed by The Gemini Team.</p>
+            </div>
+            <button id="close-about-btn" class="absolute top-2 right-2 p-1 text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Background music audio element -->
+    <audio id="background-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Main Game Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // =========================================================================
+            //  HTML Element References
+            // =========================================================================
+            const body = document.body;
+            const startScreen = document.getElementById('start-screen');
+            const questionScreen = document.getElementById('question-screen');
+            const endScreen = document.getElementById('end-screen');
+            const startButton = document.getElementById('start-btn');
+            const restartButton = document.getElementById('restart-btn');
+            const scoreElement = document.getElementById('score');
+            const timerElement = document.getElementById('timer');
+            const questionElement = document.getElementById('question');
+            const answerInput = document.getElementById('answer-input');
+            const feedbackElement = document.getElementById('feedback');
+            const finalScoreElement = document.getElementById('final-score');
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeSettingsBtn = document.getElementById('close-settings-btn');
+            const backgroundBtns = document.querySelectorAll('[data-bg]');
+            const musicBtn = document.getElementById('music-btn');
+            const backgroundMusic = document.getElementById('background-music');
+            const aboutBtn = document.getElementById('about-btn');
+            const aboutModal = document.getElementById('about-modal');
+            const closeAboutBtn = document.getElementById('close-about-btn');
+
+            // =========================================================================
+            //  GAME STATE VARIABLES
+            // =========================================================================
+            let score = 0;
+            let timeRemaining = 60; // Game duration in seconds
+            let currentAnswer = 0;
+            let timerInterval;
+
+            // =========================================================================
+            //  CORE GAME FUNCTIONS
+            // =========================================================================
+            
+            // Starts the game
+            function startGame() {
+                score = 0;
+                timeRemaining = 60;
+                scoreElement.textContent = score;
+                timerElement.textContent = `${timeRemaining}s`;
+
+                startScreen.classList.add('hidden');
+                questionScreen.classList.remove('hidden');
+                endScreen.classList.add('hidden');
+                answerInput.value = '';
+                answerInput.focus();
+
+                // Start the timer countdown
+                timerInterval = setInterval(updateTimer, 1000);
+                generateQuestion();
+            }
+
+            // Updates the timer and checks for game over
+            function updateTimer() {
+                timeRemaining--;
+                timerElement.textContent = `${timeRemaining}s`;
+
+                if (timeRemaining <= 0) {
+                    endGame();
+                }
+            }
+
+            // Ends the game and shows the final score
+            function endGame() {
+                clearInterval(timerInterval);
+                questionScreen.classList.add('hidden');
+                endScreen.classList.remove('hidden');
+                finalScoreElement.textContent = score;
+            }
+
+            // Generates a new random math question
+            function generateQuestion() {
+                // Randomly select an operator
+                const operators = ['+', '-', '*', '/'];
+                const operator = operators[Math.floor(Math.random() * operators.length)];
+
+                let num1, num2;
+
+                // Generate numbers based on the operator
+                switch (operator) {
+                    case '+':
+                        num1 = Math.floor(Math.random() * 20) + 1;
+                        num2 = Math.floor(Math.random() * 20) + 1;
+                        currentAnswer = num1 + num2;
+                        break;
+                    case '-':
+                        num1 = Math.floor(Math.random() * 20) + 11;
+                        num2 = Math.floor(Math.random() * 10) + 1;
+                        currentAnswer = num1 - num2;
+                        break;
+                    case '*':
+                        num1 = Math.floor(Math.random() * 10) + 1;
+                        num2 = Math.floor(Math.random() * 10) + 1;
+                        currentAnswer = num1 * num2;
+                        break;
+                    case '/':
+                        num2 = Math.floor(Math.random() * 9) + 2; // Divisor
+                        const tempAnswer = Math.floor(Math.random() * 10) + 1; // Ensure a whole number answer
+                        num1 = num2 * tempAnswer;
+                        currentAnswer = tempAnswer;
+                        break;
+                }
+                
+                questionElement.textContent = `${num1} ${operator} ${num2}`;
+            }
+
+            // Handles user input and provides feedback
+            function checkAnswer() {
+                const userAnswer = parseInt(answerInput.value, 10);
+                
+                // Clear feedback from previous question
+                feedbackElement.style.opacity = 0;
+
+                // Check if the input is a valid number
+                if (isNaN(userAnswer)) {
+                    // Do nothing, wait for a valid number
+                    return;
+                }
+
+                if (userAnswer === currentAnswer) {
+                    // Correct answer
+                    score++;
+                    scoreElement.textContent = score;
+                    feedbackElement.textContent = 'Correct!';
+                    feedbackElement.classList.add('text-green-400');
+                    feedbackElement.classList.remove('text-red-400');
+                } else {
+                    // Incorrect answer
+                    feedbackElement.textContent = 'Incorrect!';
+                    feedbackElement.classList.add('text-red-400');
+                    feedbackElement.classList.remove('text-green-400');
+                }
+                
+                // Show feedback briefly and then generate new question
+                feedbackElement.style.opacity = 1;
+                setTimeout(() => {
+                    feedbackElement.style.opacity = 0;
+                    answerInput.value = '';
+                    generateQuestion();
+                }, 500);
+            }
+
+            // =========================================================================
+            //  MODAL AND SETTINGS FUNCTIONS
+            // =========================================================================
+            function openSettingsModal() {
+                settingsModal.classList.remove('hidden');
+            }
+
+            function closeSettingsModal() {
+                settingsModal.classList.add('hidden');
+            }
+            
+            function openAboutModal() {
+                aboutModal.classList.remove('hidden');
+            }
+
+            function closeAboutModal() {
+                aboutModal.classList.add('hidden');
+            }
+            
+            function changeBackground(bgClass) {
+                // Remove all previous background classes and add the new one
+                body.classList.remove('bg-default', 'bg-blue-gradient', 'bg-purple-gradient', 'bg-orange-gradient');
+                body.classList.add(bgClass);
+                localStorage.setItem('game-background', bgClass); // Save preference
+            }
+
+            function toggleMusic() {
+                if (backgroundMusic.paused) {
+                    backgroundMusic.play();
+                    localStorage.setItem('music-enabled', 'true');
+                } else {
+                    backgroundMusic.pause();
+                    localStorage.setItem('music-enabled', 'false');
+                }
+            }
+            
+            // Apply saved settings on page load
+            function loadSettings() {
+                const savedBackground = localStorage.getItem('game-background');
+                if (savedBackground) {
+                    changeBackground(savedBackground);
+                } else {
+                    changeBackground('bg-default');
+                }
+
+                const musicEnabled = localStorage.getItem('music-enabled');
+                if (musicEnabled === 'true') {
+                    backgroundMusic.play();
+                }
+            }
+
+            // =========================================================================
+            //  EVENT LISTENERS
+            // =========================================================================
+            startButton.addEventListener('click', startGame);
+            restartButton.addEventListener('click', startGame);
+            settingsBtn.addEventListener('click', openSettingsModal);
+            closeSettingsBtn.addEventListener('click', closeSettingsModal);
+            aboutBtn.addEventListener('click', openAboutModal);
+            closeAboutBtn.addEventListener('click', closeAboutModal);
+            musicBtn.addEventListener('click', toggleMusic);
+
+            backgroundBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const bgClass = btn.dataset.bg;
+                    changeBackground(bgClass);
+                });
+            });
+
+            // Listen for 'Enter' key press on the input field
+            answerInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
+
+            loadSettings(); // Load settings when the page loads
+        });
+    </script>
+</body>
+</html>
